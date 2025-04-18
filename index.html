@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VGAMES QR Code Generator</title>
+    <link rel="icon" href="http://www.vgames.run.place/favicon.png" type="image/png">
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --accent-color: #fbbc05;
+            --dark-color: #202124;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .logo {
+            height: 60px;
+            margin-right: 20px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 2.2rem;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .control-panel {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .qr-display {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background-color: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        button.secondary {
+            background-color: var(--secondary-color);
+        }
+        
+        button.secondary:hover {
+            background-color: #2d9249;
+        }
+        
+        button.accent {
+            background-color: var(--accent-color);
+            color: var(--dark-color);
+        }
+        
+        button.accent:hover {
+            background-color: #e6ac04;
+        }
+        
+        #qrcode {
+            margin: 20px auto;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .color-option {
+            display: flex;
+            align-items: center;
+        }
+        
+        .color-option label {
+            margin-right: 10px;
+            min-width: 80px;
+        }
+        
+        .color-option input[type="color"] {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .pattern-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .pattern-option {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .pattern-option:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .pattern-option.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(66, 133, 244, 0.1);
+        }
+        
+        .pattern-option img {
+            width: 100%;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        
+        .api-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .api-info h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .api-info pre {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ddd;
+            background-color: #f1f1f1;
+            border-radius: 6px 6px 0 0;
+            margin-bottom: -1px;
+        }
+        
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 12px 16px;
+            transition: 0.3s;
+            color: var(--dark-color);
+            font-weight: 600;
+            border-radius: 0;
+            margin: 0;
+        }
+        
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        
+        .tab button.active {
+            background-color: white;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            background-color: white;
+        }
+        
+        .tabcontent.active {
+            display: block;
+        }
+        
+        .v-theme {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .color-options, .pattern-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="http://www.vgames.run.place/vgstu.png" alt="VGAMES Logo" class="logo">
+        <h1>VGAMES QR Code Generator</h1>
+    </div>
+    
+    <div class="container">
+        <div class="control-panel">
+            <div class="tab">
+                <button class="tablinks active" onclick="openTab(event, 'url')">URL</button>
+                <button class="tablinks" onclick="openTab(event, 'text')">Text</button>
+                <button class="tablinks" onclick="openTab(event, 'email')">Email</button>
+                <button class="tablinks" onclick="openTab(event, 'phone')">Phone</button>
+                <button class="tablinks" onclick="openTab(event, 'sms')">SMS</button>
+                <button class="tablinks" onclick="openTab(event, 'api')">API</button>
+            </div>
+            
+            <div id="url" class="tabcontent active">
+                <div class="input-group">
+                    <label for="website-url">Website URL:</label>
+                    <input type="url" id="website-url" placeholder="https://example.com">
+                    <p><small>For images, upload to a hosting service and enter the URL here.</small></p>
+                </div>
+                <button onclick="generateQR('url')">Generate QR Code</button>
+            </div>
+            
+            <div id="text" class="tabcontent">
+                <div class="input-group">
+                    <label for="text-content">Text Content:</label>
+                    <textarea id="text-content" placeholder="Enter any text you want to encode"></textarea>
+                </div>
+                <button onclick="generateQR('text')">Generate QR Code</button>
+            </div>
+            
+            <div id="email" class="tabcontent">
+                <div class="input-group">
+                    <label for="email-address">Email Address:</label>
+                    <input type="email" id="email-address" placeholder="user@example.com">
+                </div>
+                <div class="input-group">
+                    <label for="email-subject">Subject (optional):</label>
+                    <input type="text" id="email-subject" placeholder="Email subject">
+                </div>
+                <div class="input-group">
+                    <label for="email-body">Body (optional):</label>
+                    <textarea id="email-body" placeholder="Email body content"></textarea>
+                </div>
+                <button onclick="generateQR('email')">Generate QR Code</button>
+            </div>
+            
+            <div id="phone" class="tabcontent">
+                <div class="input-group">
+                    <label for="phone-number">Phone Number:</label>
+                    <input type="tel" id="phone-number" placeholder="+1234567890">
+                </div>
+                <button onclick="generateQR('phone')">Generate QR Code</button>
+            </div>
+            
+            <div id="sms" class="tabcontent">
+                <div class="input-group">
+                    <label for="sms-number">Phone Number:</label>
+                    <input type="tel" id="sms-number" placeholder="+1234567890">
+                </div>
+                <div class="input-group">
+                    <label for="sms-message">Message (optional):</label>
+                    <textarea id="sms-message" placeholder="SMS message content"></textarea>
+                </div>
+                <button onclick="generateQR('sms')">Generate QR Code</button>
+            </div>
+            
+            <div id="api" class="tabcontent">
+                <h3>VGAMES QR Code API</h3>
+                <div class="api-info">
+                    <p>Use our API to generate QR codes programmatically:</p>
+                    <h4>URL QR Code:</h4>
+                    <pre>http://qr-code-edition.vgames.run.place?api=72back-url=[your-url]</pre>
+                    <p>Example: <code>http://qr-code-edition.vgames.run.place?api=72back-url=example.com</code></p>
+                    
+                    <h4>Email QR Code:</h4>
+                    <pre>http://qr-code-edition.vgames.run.place?api=72back-email=[email-address]</pre>
+                    
+                    <h4>Image QR Code:</h4>
+                    <pre>http://qr-code-edition.vgames.run.place?api=72back-pic=[image-url]</pre>
+                    
+                    <h4>Do's and Don'ts:</h4>
+                    <ul>
+                        <li><strong>Do</strong> encode URLs properly</li>
+                        <li><strong>Do</strong> keep URLs under 300 characters for best results</li>
+                        <li><strong>Don't</strong> use the API for sensitive data</li>
+                        <li><strong>Don't</strong> exceed 1000 requests per hour</li>
+                    </ul>
+                </div>
+                <button onclick="generateQR('api')">Generate API QR Code</button>
+            </div>
+            
+            <h3>QR Code Customization</h3>
+            <div class="input-group">
+                <label for="qr-size">Size (px):</label>
+                <input type="number" id="qr-size" min="100" max="1000" value="300">
+            </div>
+            
+            <div class="color-options">
+                <div class="color-option">
+                    <label for="qr-color">Color:</label>
+                    <input type="color" id="qr-color" value="#4285f4">
+                </div>
+                <div class="color-option">
+                    <label for="qr-bg-color">Background:</label>
+                    <input type="color" id="qr-bg-color" value="#ffffff">
+                </div>
+            </div>
+            
+            <h3>Pattern Style</h3>
+            <div class="pattern-options">
+                <div class="pattern-option selected" onclick="selectPattern(this, 'default')">
+                    <div>Default</div>
+                </div>
+                <div class="pattern-option" onclick="selectPattern(this, 'dots')">
+                    <div>Dots</div>
+                </div>
+                <div class="pattern-option" onclick="selectPattern(this, 'vtheme')">
+                    <div>VGAMES Theme</div>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="logo-opacity">Logo Opacity:</label>
+                <input type="range" id="logo-opacity" min="0" max="100" value="100">
+            </div>
+            
+            <button class="secondary" onclick="downloadQR()" id="download-btn" disabled>Download QR Code</button>
+            <button class="accent" onclick="shareQR()" id="share-btn" disabled>Share QR Code</button>
+        </div>
+        
+        <div class="qr-display">
+            <h3>Your QR Code</h3>
+            <div id="qrcode"></div>
+            <img src="http://www.vgames.run.place/favicon.png" class="v-theme" id="qr-logo" style="opacity: 1;">
+            <div id="qr-info" style="margin-top: 20px; text-align: center;"></div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>VGAMES QR Code Generator | &copy; 2023 All Rights Reserved</p>
+    </div>
+
+    <script>
+        let currentPattern = 'default';
+        let currentQRContent = '';
+        
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.className += " active";
+        }
+        
+        function selectPattern(element, pattern) {
+            document.querySelectorAll('.pattern-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            currentPattern = pattern;
+            
+            // Regenerate QR code if one exists
+            if (currentQRContent) {
+                generateQR('refresh');
+            }
+        }
+        
+        function generateQR(type) {
+            var qrContent = "";
+            var qrDiv = document.getElementById("qrcode");
+            
+            // Clear previous QR code
+            qrDiv.innerHTML = "";
+            
+            switch(type) {
+                case 'url':
+                    qrContent = document.getElementById("website-url").value;
+                    if (!qrContent) {
+                        alert("Please enter a URL");
+                        return;
+                    }
+                    if (!qrContent.startsWith('http://') && !qrContent.startsWith('https://')) {
+                        qrContent = 'http://' + qrContent;
+                    }
+                    break;
+                    
+                case 'text':
+                    qrContent = document.getElementById("text-content").value;
+                    if (!qrContent) {
+                        alert("Please enter some text");
+                        return;
+                    }
+                    break;
+                    
+                case 'email':
+                    var email = document.getElementById("email-address").value;
+                    if (!email) {
+                        alert("Please enter an email address");
+                        return;
+                    }
+                    var subject = document.getElementById("email-subject").value;
+                    var body = document.getElementById("email-body").value;
+                    qrContent = "mailto:" + encodeURIComponent(email);
+                    if (subject || body) {
+                        qrContent += "?";
+                        if (subject) qrContent += "subject=" + encodeURIComponent(subject);
+                        if (body) qrContent += (subject ? "&" : "") + "body=" + encodeURIComponent(body);
+                    }
+                    break;
+                    
+                case 'phone':
+                    var phone = document.getElementById("phone-number").value;
+                    if (!phone) {
+                        alert("Please enter a phone number");
+                        return;
+                    }
+                    qrContent = "tel:" + phone;
+                    break;
+                    
+                case 'sms':
+                    var smsNumber = document.getElementById("sms-number").value;
+                    if (!smsNumber) {
+                        alert("Please enter a phone number");
+                        return;
+                    }
+                    var smsMessage = document.getElementById("sms-message").value;
+                    qrContent = "sms:" + smsNumber;
+                    if (smsMessage) {
+                        qrContent += "?body=" + encodeURIComponent(smsMessage);
+                    }
+                    break;
+                    
+                case 'api':
+                    var url = document.getElementById("website-url").value;
+                    if (url) {
+                        qrContent = `http://qr-code-edition.vgames.run.place?api=72back-url=${encodeURIComponent(url)}`;
+                    } else {
+                        alert("Please enter a URL first in the URL tab");
+                        return;
+                    }
+                    break;
+                    
+                case 'refresh':
+                    qrContent = currentQRContent;
+                    break;
+            }
+            
+            currentQRContent = qrContent;
+            
+            var color = document.getElementById("qr-color").value;
+            var bgColor = document.getElementById("qr-bg-color").value;
+            var size = document.getElementById("qr-size").value;
+            var logoOpacity = document.getElementById("logo-opacity").value / 100;
+            
+            // Apply VGAMES theme if selected
+            if (currentPattern === 'vtheme') {
+                color = '#4285f4'; // Blue
+                bgColor = '#f8f9fa'; // Light gray
+                document.getElementById("qr-color").value = color;
+                document.getElementById("qr-bg-color").value = bgColor;
+                
+                // Show V logo
+                document.getElementById("qr-logo").src = "http://www.vgames.run.place/vgstu.png";
+            } else {
+                // Show favicon
+                document.getElementById("qr-logo").src = "http://www.vgames.run.place/favicon.png";
+            }
+            
+            // Set logo opacity
+            document.getElementById("qr-logo").style.opacity = logoOpacity;
+            
+            // Generate QR code
+            new QRCode(qrDiv, {
+                text: qrContent,
+                width: size,
+                height: size,
+                colorDark: color,
+                colorLight: bgColor,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            document.getElementById("download-btn").disabled = false;
+            document.getElementById("share-btn").disabled = false;
+            
+            // Update QR info
+            document.getElementById("qr-info").innerHTML = `
+                <p><strong>Type:</strong> ${type.toUpperCase()}</p>
+                <p><strong>Content:</strong> ${qrContent.length > 50 ? qrContent.substring(0, 50) + '...' : qrContent}</p>
+            `;
+        }
+        
+        function downloadQR() {
+            var qrContainer = document.querySelector(".qr-display");
+            
+            html2canvas(qrContainer).then(canvas => {
+                var link = document.createElement("a");
+                link.download = "vgames-qrcode.png";
+                link.href = canvas.toDataURL("image/png");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
+        
+        function shareQR() {
+            var qrContainer = document.querySelector(".qr-display");
+            
+            html2canvas(qrContainer).then(canvas => {
+                canvas.toBlob(function(blob) {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'VGAMES QR Code',
+                            text: 'Check out this QR code I created with VGAMES QR Generator',
+                            files: [new File([blob], 'qrcode.png', { type: 'image/png' })]
+                        }).catch(err => {
+                            console.log('Error sharing:', err);
+                            fallbackShare();
+                        });
+                    } else {
+                        fallbackShare();
+                    }
+                }, 'image/png');
+            });
+            
+            function fallbackShare() {
+                alert("Sharing not supported in your browser. Please download and share the image manually.");
+            }
+        }
+        
+        // Update logo opacity in real-time
+        document.getElementById("logo-opacity").addEventListener('input', function() {
+            document.getElementById("qr-logo").style.opacity = this.value / 100;
+        });
+    </script>
+</body>
+</html>
